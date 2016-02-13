@@ -3,6 +3,7 @@
 
 import sys
 import time
+from collections import deque
 from html.parser import HTMLParser
 from urllib.request import urlopen
 from urllib.parse import urljoin
@@ -25,14 +26,21 @@ class LinkParser(HTMLParser):
         print("URL {} ... {} links".format(url, len(self.links)))
         return self.links
 
+def crawl(seedUrls):
+    urlsToVisit = deque(seedUrls)
+    parser = LinkParser()
+    while urlsToVisit:
+        url = urlsToVisit.popleft()
+        links = parser.get_links(url)
+        urlsToVisit.extend(links)
+
 def main():
     print("*** persona ***")
     print("Python {}".format(sys.version))
     print("Started at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     started_at = time.time()
 
-    parser = LinkParser()
-    links = parser.get_links('https://github.com/petrveprek/persona')
+    crawl(['https://github.com/petrveprek/persona'])
 
     print("Completed at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     elapsed = time.time() - started_at
