@@ -5,24 +5,25 @@ import sys
 import time
 from html.parser import HTMLParser
 from urllib.request import urlopen
+from urllib.parse import urljoin
 
 class LinkParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
-            print("Tag 'a'")
             for (key, value) in attrs:
                 if key == 'href':
-                    print("Attribute 'href' {}".format(value))
+                    link = urljoin(self.baseUrl, value)
+                    self.links.append(link)
     def get_links(self, url):
         self.baseUrl = url
-        print("Request: {}".format(url))
+        self.links = []
         response = urlopen(url)
-        print("Response: {}".format(response))
-        print("Header: {}.".format(response.getheader('Content-Type')))
         if 'text/html' in response.getheader('Content-Type'):
             htmlBytes = response.read()
             htmlString = htmlBytes.decode('utf-8')
             self.feed(htmlString)
+        print("URL {} ... {} links".format(url, len(self.links)))
+        return self.links
 
 def main():
     print("*** persona ***")
@@ -31,7 +32,7 @@ def main():
     started_at = time.time()
 
     parser = LinkParser()
-    parser.get_links('https://github.com/petrveprek/persona')
+    links = parser.get_links('https://github.com/petrveprek/persona')
 
     print("Completed at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     elapsed = time.time() - started_at
