@@ -23,16 +23,20 @@ class LinkParser(HTMLParser):
             htmlBytes = response.read()
             htmlString = htmlBytes.decode('utf-8')
             self.feed(htmlString)
-        print("URL {} ... {} links".format(url, len(self.links)))
         return self.links
 
 def crawl(seedUrls):
     urlsToVisit = deque(seedUrls)
+    urlsVisited = set()
     parser = LinkParser()
     while urlsToVisit:
         url = urlsToVisit.popleft()
         links = parser.get_links(url)
-        urlsToVisit.extend(links)
+        urlsVisited.add(url)
+        for link in links:
+            if link not in urlsVisited and link not in urlsToVisit:
+                urlsToVisit.extend([link])
+        print("{} / {} {} {}x".format(len(urlsVisited), len(urlsToVisit), url, len(links)))
 
 def main():
     print("*** persona ***")
