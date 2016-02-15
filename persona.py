@@ -25,17 +25,24 @@ class LinkParser(HTMLParser):
             self.feed(htmlString)
         return self.links
 
-def crawl(seedUrls):
+def crawl(seedUrls, maxVisits = None, direction = None):
     urlsToVisit = deque(seedUrls)
     urlsVisited = set()
+    if maxVisits == None:
+        maxVisits = 10
+    if direction == None:
+        direction = 'breath-first'
     parser = LinkParser()
-    while urlsToVisit:
+    while urlsToVisit and len(urlsVisited) < maxVisits:
         url = urlsToVisit.popleft()
         links = parser.get_links(url)
         urlsVisited.add(url)
         for link in links:
             if link not in urlsVisited and link not in urlsToVisit:
-                urlsToVisit.extend([link])
+                if direction == 'depth-first':
+                    urlsToVisit.appendleft(link) # depth first
+                else:
+                    urlsToVisit.append(link) # breath first
         print("{} / {} {} {}x".format(len(urlsVisited), len(urlsToVisit), url, len(links)))
 
 def main():
