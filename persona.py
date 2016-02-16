@@ -8,6 +8,17 @@ from html.parser import HTMLParser
 from urllib.request import urlopen
 from urllib.parse import urljoin
 
+PERSONA = 'geek'
+PERSONAS = \
+{
+    'geek': 
+    {
+        'seedUrls': ['https://github.com/petrveprek/persona'],
+        'whiteList': None,
+        'blackList': None,
+    }
+}
+
 class LinkParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
@@ -51,7 +62,7 @@ def main():
     print("Started at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     started_at = time.time()
 
-    crawl(['https://github.com/petrveprek/persona'])
+    crawl(PERSONAS[PERSONA]['seedUrls'])
 
     print("Completed at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     elapsed = time.time() - started_at
