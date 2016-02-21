@@ -59,9 +59,8 @@ class HtmlParser(html.parser.HTMLParser):
         self.baseUrl = url
         self.links = []
         text = ""
-        headers = {'User-Agent': 'Self'}
-        request = urllib.request.Request(url, headers=headers)
-        response = urlopen(request)
+        response = urlopen(urllib.request.Request(url,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'}))
         if 'text/html' in response.getheader('Content-Type'):
             character_set = response.headers.get_content_charset()
             htmlBytes = response.read()
