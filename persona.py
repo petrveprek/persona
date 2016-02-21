@@ -1,10 +1,11 @@
 #!python3
 """persona"""
 
+import html.parser
 import sys
 import time
+import urllib.request
 from collections import deque
-from html.parser import HTMLParser
 from random import randint
 from urllib.parse import urljoin
 from urllib.request import urlopen
@@ -12,14 +13,42 @@ from urllib.request import urlopen
 PERSONA = 'persona'
 PERSONAS = {
     'geek': {
-        'spider': {
-            'seedUrls': ['http://www.wired.com/', 'http://www.engadget.com/', 'http://www.gizmodo.co.uk/', 'http://www.ubergizmo.com/', 'http://techcrunch.com/'],
-            'blackList': ['entertainment', 'fashion', 'politics', 'sport']}},
+        'browse': {
+            'seeds': [
+                'http://www.wired.com/',
+                'http://www.engadget.com/',
+                'http://www.gizmodo.co.uk/',
+                'http://www.ubergizmo.com/',
+                'http://techcrunch.com/'
+            ],
+            'blacks': [
+                'entertainment',
+                'fashion',
+                'politics',
+                'sport'
+            ]
+        }
+    },
     'persona': {
-        'spider': {
-            'seedUrls': ['https://github.com/petrveprek/persona']}}}
+        'browse': {
+            'seeds': [
+                'http://github.com/petrveprek/persona'
+            ]
+        },
+        'search': {
+            'queries': [
+                'http://search.yahoo.com/search?p={}',
+                'http://www.google.com/search?q={}'
+            ],
+            'terms': [
+                'github',
+                'persona'
+            ]
+        }
+    }
+}
 
-class HtmlParser(HTMLParser):
+class HtmlParser(html.parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             for (key, value) in attrs:
@@ -30,40 +59,35 @@ class HtmlParser(HTMLParser):
         self.baseUrl = url
         self.links = []
         text = ""
-        response = urlopen(url)
+        headers = {'User-Agent': 'Self'}
+        request = urllib.request.Request(url, headers=headers)
+        response = urlopen(request)
         if 'text/html' in response.getheader('Content-Type'):
+            character_set = response.headers.get_content_charset()
             htmlBytes = response.read()
-            htmlString = htmlBytes.decode('utf-8')
+            htmlString = htmlBytes.decode(character_set)
             self.feed(htmlString)
             text = htmlString
         return text, self.links
 
-def crawl(persona, maxVisits = None, direction = None):
-    seedUrls = []
-    whiteList = []
-    blackList = []
-    if 'spider' in persona:
-        if 'seedUrls' in persona['spider']:
-            seedUrls = persona['spider']['seedUrls']
-        if 'whiteList' in persona['spider']:
-            whiteList = persona['spider']['whiteList']
-        if 'blackList' in persona['spider']:
-            blackList = persona['spider']['blackList']
-    print("{} {}x URLs {}x mandatory {}x forbidden".format(PERSONA, len(seedUrls), len(whiteList), len(blackList)))
-    urlsToVisit = deque(seedUrls)
-    urlsVisited = set()
+def browse(persona, maxVisits = None, direction = None):
+    seedUrls = persona.get('browse', {}).get('seeds', [])
+    whiteList = persona.get('browse', {}).get('whites', [])
+    blackList = persona.get('browse', {}).get('blacks', [])
     if maxVisits == None:
         maxVisits = 10
-    if direction == None:
-        direction = 'breath-first'
     if direction not in ['breath-first', 'depth-first']:
         direction = 'random-walk'
+    print("browse: {} {}x max {} {}x seeds {}x mandatory {}x forbidden".format(
+          PERSONA, maxVisits, direction, len(seedUrls), len(whiteList), len(blackList)))
+    urlsToVisit = deque(seedUrls)
+    urlsVisited = set()
     parser = HtmlParser()
     while urlsToVisit and len(urlsVisited) < maxVisits:
         url = urlsToVisit.popleft()
         text, links = parser.get_text_links(url)
         urlsVisited.add(url)
-        if blackList == None or not any(black.lower() in text.lower() for black in blackList):
+        if not any(black.lower() in text.lower() for black in blackList):
             for link in links:
                 if link not in urlsVisited and link not in urlsToVisit:
                     if direction == 'breath-first':
@@ -74,13 +98,28 @@ def crawl(persona, maxVisits = None, direction = None):
                         urlsToVisit.insert(randint(0, len(urlsToVisit)), link) # random walk
         print("{} / {} {} {}x".format(len(urlsVisited), len(urlsToVisit), url, len(links)))
 
+def search(persona):
+    queries = persona.get('search', {}).get('queries', [])
+    terms = persona.get('search', {}).get('terms', [])
+    print("search: {} {}x queries {}x terms".format(
+          PERSONA, len(queries), len(terms)))
+    searches = 0
+    parser = HtmlParser()
+    for query in queries:
+        for term in terms:
+            url = query.format(term)
+            text, links = parser.get_text_links(url)
+            searches += 1
+            print("{} / {} {}".format(searches, len(queries) * len(terms), url))
+
 def main():
     print("*** persona ***")
     print("Python {}".format(sys.version))
     print("Started at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     started_at = time.time()
 
-    crawl(PERSONAS[PERSONA])
+    browse(PERSONAS[PERSONA])
+    search(PERSONAS[PERSONA])
 
     print("Completed at {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     elapsed = time.time() - started_at
