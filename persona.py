@@ -2,6 +2,7 @@
 """persona"""
 
 import html.parser
+import math
 import sys
 import time
 import urllib.request
@@ -59,14 +60,19 @@ class HtmlParser(html.parser.HTMLParser):
         self.baseUrl = url
         self.links = []
         text = ""
-        response = urlopen(urllib.request.Request(url,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'}))
-        if 'text/html' in response.getheader('Content-Type'):
-            character_set = response.headers.get_content_charset()
-            htmlBytes = response.read()
-            htmlString = htmlBytes.decode(character_set)
-            self.feed(htmlString)
-            text = htmlString
+        try:
+            response = urlopen(urllib.request.Request(url,
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'}))
+        except:
+            pass
+        else:
+            if 'text/html' in response.getheader('Content-Type'):
+                character_set = response.headers.get_content_charset()
+                if character_set != None:
+                    htmlBytes = response.read()
+                    htmlString = htmlBytes.decode(character_set)
+                    self.feed(htmlString)
+                    text = htmlString
         return text, self.links
 
 def browse(persona, maxVisits = None, direction = None):
@@ -74,7 +80,7 @@ def browse(persona, maxVisits = None, direction = None):
     whiteList = persona.get('browse', {}).get('whites', [])
     blackList = persona.get('browse', {}).get('blacks', [])
     if maxVisits == None:
-        maxVisits = 10
+        maxVisits = math.inf
     if direction not in ['breath-first', 'depth-first']:
         direction = 'random-walk'
     print("browse: {} {}x max {} {}x seeds {}x mandatory {}x forbidden".format(
@@ -104,12 +110,10 @@ def search(persona):
           PERSONA, len(queries), len(terms)))
     searches = 0
     parser = HtmlParser()
-    for query in queries:
-        for term in terms:
-            url = query.format(term)
-            text, links = parser.get_text_links(url)
-            searches += 1
-            print("{} / {} {}".format(searches, len(queries) * len(terms), url))
+    for url in [query.format(term) for query in queries for term in terms]:
+        text, links = parser.get_text_links(url)
+        searches += 1
+        print("{} / {} {}".format(searches, len(queries) * len(terms), url))
 
 def main():
     print("*** persona ***")
