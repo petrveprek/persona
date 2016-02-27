@@ -66,7 +66,7 @@ class HtmlParser(html.parser.HTMLParser):
         except:
             pass
         else:
-            if 'text/html' in response.getheader('Content-Type'):
+            if response.getheader('Content-Type') is not None and 'text/html' in response.getheader('Content-Type'):
                 character_set = response.headers.get_content_charset()
                 if character_set != None:
                     htmlBytes = response.read()
