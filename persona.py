@@ -33,12 +33,16 @@ PERSONAS = {
     'persona': {
         'browse': {
             'seeds': [
+                'http://search.yahoo.com/search?p=persona',
+                'http://www.bing.com/search?q=persona',
+                'http://www.google.com/search?q=persona',
                 'http://github.com/petrveprek/persona'
             ]
         },
         'search': {
             'queries': [
                 'http://search.yahoo.com/search?p={}',
+                'http://www.bing.com/search?q={}',
                 'http://www.google.com/search?q={}'
             ],
             'terms': [
@@ -110,11 +114,15 @@ def search(persona):
     print("search: {} {}x queries {}x terms".format(
           PERSONA, len(queries), len(terms)))
     searches = 0
+    urlsToVisit = set()
     parser = HtmlParser()
     for url in [query.format(term) for query in queries for term in terms]:
         text, links = parser.get_text_links(url)
         searches += 1
-        print("{} / {} {}".format(searches, len(queries) * len(terms), url))
+        for link in links:
+            if link not in urlsToVisit:
+                urlsToVisit.add(link)
+        print("{} / {} {} {}x {}x".format(searches, len(queries) * len(terms), url, len(links), len(urlsToVisit)))
 
 def main():
     print("*** persona ***")
