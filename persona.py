@@ -66,7 +66,7 @@ class HtmlParser(html.parser.HTMLParser):
         text = ""
         try:
             response = urlopen(urllib.request.Request(url,
-                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'}))
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'}))
         except:
             pass
         else:
@@ -75,9 +75,13 @@ class HtmlParser(html.parser.HTMLParser):
                 if character_set == None:
                     character_set = 'utf-8'
                 htmlBytes = response.read()
-                htmlString = htmlBytes.decode(character_set)
-                self.feed(htmlString)
-                text = htmlString
+                try:
+                    htmlString = htmlBytes.decode(character_set)
+                except:
+                    pass
+                else:
+                    self.feed(htmlString)
+                    text = htmlString
         return text, self.links
 
 def browse(persona, maxVisits = None, direction = None):
