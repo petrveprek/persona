@@ -74,8 +74,8 @@ class HtmlParser(html.parser.HTMLParser):
                 character_set = response.headers.get_content_charset()
                 if character_set == None:
                     character_set = 'utf-8'
-                htmlBytes = response.read()
                 try:
+                    htmlBytes = response.read()
                     htmlString = htmlBytes.decode(character_set)
                 except:
                     pass
