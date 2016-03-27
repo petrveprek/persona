@@ -10,6 +10,8 @@ from collections import deque
 from random import randint
 from urllib.parse import urljoin
 from urllib.parse import urlparse
+from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
 from urllib.request import urlopen
 
 PERSONA = 'persona'
@@ -108,12 +110,17 @@ def browse(persona, maxVisits = None, direction = None):
         urlsVisited.add(url)
         if not any(black.lower() in text.lower() for black in blackList):
             for link in links:
+                parts = urlsplit(link)
+                basic = (parts.scheme, parts.netloc, parts.path, '', '')
+                link = urlunsplit(basic)
+                #print(link)
                 if link not in urlsVisited and link not in urlsToVisit:
                     if direction == 'auto':
                         if urlparse(link).netloc == site:
-                            urlsToVisit.append(link) # same last
+                            urlsToVisit.insert(randint(0, len(urlsToVisit)), link) # same -> random
+                            #urlsToVisit.append(link) # same -> last
                         else:
-                            urlsToVisit.appendleft(link) # new first
+                            urlsToVisit.appendleft(link) # different -> first
                     elif direction == 'breath-first':
                         urlsToVisit.append(link) # breath first
                     elif direction == 'depth-first':
