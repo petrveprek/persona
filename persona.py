@@ -76,18 +76,23 @@ class HtmlParser(html.parser.HTMLParser):
         except:
             pass
         else:
-            if response.getheader('Content-Type') is not None and 'text/html' in response.getheader('Content-Type'):
-                character_set = response.headers.get_content_charset()
-                if character_set == None:
-                    character_set = 'utf-8'
-                try:
-                    htmlBytes = response.read()
-                    htmlString = htmlBytes.decode(character_set)
-                except:
-                    pass
-                else:
-                    self.feed(htmlString)
-                    text = htmlString
+            try:
+                contentType = response.getheader('Content-Type')
+            except:
+                pass
+            else:
+                if contentType is not None and 'text/html' in contentType:
+                    character_set = response.headers.get_content_charset()
+                    if character_set == None:
+                        character_set = 'utf-8'
+                    try:
+                        htmlBytes = response.read()
+                        htmlString = htmlBytes.decode(character_set)
+                    except:
+                        pass
+                    else:
+                        self.feed(htmlString)
+                        text = htmlString
         return text, self.links
 
 def browse(persona, maxVisits = None, direction = None):
