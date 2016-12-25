@@ -132,8 +132,9 @@ def browse(persona, maxVisits = None, direction = None):
                         urlsToVisit.appendleft(link) # depth first
                     else:
                         urlsToVisit.insert(randint(0, len(urlsToVisit)), link) # random walk
-        print("{} / {} {} {}x".format(
-              len(urlsVisited), len(urlsToVisit), printable(url), len(links)))
+        if len(urlsVisited) % 100 == 0:
+            print("{} / {} {} {}x".format(
+                  len(urlsVisited), len(urlsToVisit), printable(url), len(links)))
 
 def search(persona):
     queries = persona.get('search', {}).get('queries', [])
